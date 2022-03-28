@@ -66,6 +66,7 @@ function App() {
                     <fieldset>
                         <input
                             autoFocus
+                            aria-label={`Name ${index + 1}`}
                             onChange={(event) => dispatch({
                                 type: 'rename',
                                 index, 
@@ -74,6 +75,7 @@ function App() {
                             value={response.name}
                         />
                         <input
+                            aria-label={`Response ${index + 1}`}
                             onChange={(event) => dispatch({
                                 type: 'update',
                                 index, 
