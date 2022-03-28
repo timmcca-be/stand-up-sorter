@@ -1,4 +1,4 @@
-import React, { useReducer } from 'react';
+import React, { useReducer, useRef } from 'react';
 import './App.css';
 
 type Response = {
@@ -19,8 +19,8 @@ type Action = {
 }
 
 const EMPTY_RESPONSE: Response = {
-    name: "",
-    response: "",
+    name: '',
+    response: '',
 };
 
 function responsesReducer(responses: Response[], action: Action): Response[] {
@@ -49,14 +49,21 @@ function responsesReducer(responses: Response[], action: Action): Response[] {
 }
 
 function App() {
+    const lastNameInput = useRef<HTMLInputElement>(null);
     const [responses, dispatch] = useReducer(responsesReducer, [EMPTY_RESPONSE]);
+    const nonEmptyResponses = responses.filter((response) => response.name !== '' && response.response !== '');
 
     return (
         <main>
             <h1>Stand-up sorter</h1>
             <form onSubmit={(event) => {
                 event.preventDefault();
-                dispatch({type: 'add'});
+                const lastResponse = responses.at(-1);
+                if (lastResponse != null && lastResponse.name === '' && lastResponse.response === '') {
+                    lastNameInput.current?.focus();
+                } else {
+                    dispatch({type: 'add'});
+                }
             }}>
                 <div className='labels'>
                     <label>Name</label>
@@ -67,9 +74,10 @@ function App() {
                         <input
                             autoFocus
                             aria-label={`Name ${index + 1}`}
+                            ref={index === responses.length - 1 ? lastNameInput : undefined}
                             onChange={(event) => dispatch({
                                 type: 'rename',
-                                index, 
+                                index,
                                 name: event.target.value,
                             })}
                             value={response.name}
@@ -78,7 +86,7 @@ function App() {
                             aria-label={`Response ${index + 1}`}
                             onChange={(event) => dispatch({
                                 type: 'update',
-                                index, 
+                                index,
                                 response: event.target.value,
                             })}
                             value={response.response}
@@ -87,12 +95,16 @@ function App() {
                 ))}
                 <button>Add</button>
             </form>
-            {responses
-                .filter((response) => response.name !== "" && response.response !== "")
-                .sort((a, b) => a.response.localeCompare(b.response))
-                .map((response) => (
-                    <p>{response.name}: {response.response}</p>
-                ))}
+            <p>{nonEmptyResponses.length} response{nonEmptyResponses.length !== 1 && 's'}</p>
+            <textarea
+                value={
+                    nonEmptyResponses
+                        .sort((a, b) => a.response.localeCompare(b.response))
+                        .map((response) => `${response.name}: ${response.response}`)
+                        .join('\n')
+                }
+                rows={Math.max(responses.length, 15)}
+            />
         </main>
     );
 }
